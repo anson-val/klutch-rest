@@ -22,6 +22,7 @@ import com.example.classes.*
 import com.example.classes.exceptions.IdAlreadyExistsException
 import com.example.model.Problems
 import com.example.model.TestCases
+import com.example.model.Users
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -32,7 +33,7 @@ fun initDatabase() {
     Database.connect(dataSource)
 
     transaction {
-        SchemaUtils.create(Problems, TestCases)
+        SchemaUtils.create(Users, Problems, TestCases)
     }
 }
 
