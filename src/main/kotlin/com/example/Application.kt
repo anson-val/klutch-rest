@@ -10,12 +10,31 @@ import io.ktor.server.plugins.*
 import kotlinx.serialization.json.Json
 import io.ktor.server.plugins.requestvalidation.*
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
+
 import com.example.plugins.*
 import com.example.routes.*
 import com.example.classes.*
 import com.example.classes.exceptions.IdAlreadyExistsException
+import com.example.model.Problems
+import com.example.model.TestCases
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+
+fun initDatabase() {
+    val config = HikariConfig("/hikari.properties")
+    config.schema = "public"
+    val dataSource = HikariDataSource(config)
+    Database.connect(dataSource)
+
+    transaction {
+        SchemaUtils.create(Problems, TestCases)
+    }
+}
 
 fun Application.module() {
     install(ContentNegotiation) {
