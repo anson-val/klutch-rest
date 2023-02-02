@@ -81,4 +81,6 @@ fun Application.module() {
     configureTemplating()
     configureIndexRouting()
     configureProblemsRouting()
+
+    initDatabase()
 }
