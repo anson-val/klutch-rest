@@ -3,9 +3,8 @@ package com.example.classes
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Problem (
-    val id: String,
+data class ProblemPostDTO(
     val title: String,
     val description: String,
-    val testCases: List<TestCase>
+    val testCases: List<TestCasePostDTO>
 )

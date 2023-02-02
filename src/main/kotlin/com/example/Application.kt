@@ -70,7 +70,14 @@ fun Application.module() {
     }
 
     install(RequestValidation) {
-        validate<Problem> { problem ->
+        validate<ProblemPostDTO> { problem ->
+            when {
+                problem.testCases.sumOf { it.weight } != 1.0 -> ValidationResult.Invalid("Weights in test cases should add up to 1")
+                else -> ValidationResult.Valid
+            }
+        }
+
+        validate<ProblemPutDTO> { problem ->
             when {
                 problem.testCases.sumOf { it.weight } != 1.0 -> ValidationResult.Invalid("Weights in test cases should add up to 1")
                 else -> ValidationResult.Valid

@@ -3,8 +3,7 @@ package com.example.classes
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TestCase(
-    val id: String,
+data class TestCasePostDTO(
     val input: String,
     val expectedOutput: String,
     val comment: String,
