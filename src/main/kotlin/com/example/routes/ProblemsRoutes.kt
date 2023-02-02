@@ -1,12 +1,14 @@
 package com.example.routes
 
 import io.ktor.server.routing.*
+import io.ktor.server.plugins.*
 import io.ktor.server.response.*
+import io.ktor.server.request.*
 import io.ktor.server.application.*
 import java.util.*
 
 import com.example.classes.*
-import io.ktor.server.request.*
+import com.example.classes.exceptions.*
 
 fun Application.configureProblemsRouting() {
     routing {
@@ -28,6 +30,8 @@ fun Application.configureProblemsRouting() {
 
             post {
                 val newProblem = call.receive<Problem>()
+
+                if (problemStorage.any { it.id == newProblem.id }) throw IdAlreadyExistsException(newProblem.id)
                 problemStorage.add(newProblem)
 
                 call.respond(mapOf(
@@ -37,8 +41,8 @@ fun Application.configureProblemsRouting() {
 
             route("{id}") {
                 get {
-                    val requestedId = call.parameters["id"]
-                    val requestedProblem = problemStorage.find { it.id == requestedId }
+                    val requestedId = call.parameters["id"]!!
+                    val requestedProblem = problemStorage.find { it.id == requestedId } ?: throw NotFoundException("Problem ID $requestedId not found")
 
                     call.respond(mapOf(
                         "data" to requestedProblem
@@ -47,7 +51,7 @@ fun Application.configureProblemsRouting() {
 
                 put {
                     val requestedId = call.parameters["id"]
-                    problemStorage.removeIf { it.id == requestedId }
+                    if (!problemStorage.removeIf { it.id == requestedId }) throw NotFoundException("Problem ID $requestedId not found")
 
                     val updatedProblem = call.receive<Problem>()
                     problemStorage.add(updatedProblem)
@@ -59,7 +63,7 @@ fun Application.configureProblemsRouting() {
 
                 delete {
                     val requestedId = call.parameters["id"]
-                    problemStorage.removeIf { it.id == requestedId }
+                    if (!problemStorage.removeIf { it.id == requestedId }) throw NotFoundException("Problem ID $requestedId not found")
 
                     call.respond(mapOf(
                         "OK" to true
