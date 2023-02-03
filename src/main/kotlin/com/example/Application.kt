@@ -1,28 +1,34 @@
 package com.example
 
+import kotlin.collections.joinToString
+import kotlin.collections.sumOf
+import kotlinx.serialization.json.Json
+
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
-import io.ktor.server.plugins.*
-import kotlinx.serialization.json.Json
-import io.ktor.server.plugins.requestvalidation.*
+import io.ktor.server.sessions.*
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 
-import com.example.plugins.*
-import com.example.routes.*
-import com.example.classes.*
+import com.example.classes.ProblemPostDTO
+import com.example.classes.ProblemPutDTO
+import com.example.classes.UserSession
 import com.example.classes.exceptions.IdAlreadyExistsException
 import com.example.model.Problems
 import com.example.model.TestCases
 import com.example.model.Users
+import com.example.routes.*
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -86,9 +92,29 @@ fun Application.module() {
         }
     }
 
-    configureTemplating()
+    install(Authentication) {
+        session<UserSession>("auth-session") {
+            validate {session ->
+                session
+            }
+
+            challenge {
+                throw BadRequestException("Authentication Error.")
+            }
+        }
+    }
+
+    install(Sessions) {
+        cookie<UserSession>("user_session") {
+            cookie.path = "/"
+            cookie.maxAgeInSeconds = 86_400 // seconds in 1 day
+        }
+    }
+
     configureIndexRouting()
     configureProblemsRouting()
     configureUsersRouting()
+    configureLoginRouting()
+    configureLogoutRouting()
     initDatabase()
 }

@@ -4,6 +4,8 @@ import io.ktor.server.routing.*
 import io.ktor.server.plugins.*
 import io.ktor.server.response.*
 import io.ktor.server.request.*
+import io.ktor.server.auth.*
+import io.ktor.server.sessions.*
 import io.ktor.server.application.*
 
 import org.jetbrains.exposed.sql.*
@@ -17,7 +19,7 @@ import com.example.model.TestCases
 
 fun Application.configureProblemsRouting() {
     routing {
-        route("problems") {
+        route("/problems") {
             get {
                 var problems: List<Map<String, String>>? = null
 
@@ -38,31 +40,36 @@ fun Application.configureProblemsRouting() {
                 )
             }
 
-            post {
-                val newProblem = call.receive<ProblemPostDTO>()
-                var newProblemId: Int? = null
+            authenticate("auth-session") {
+                post {
+                    val userSession = call.principal<UserSession>()
+                    call.sessions.set(userSession?.copy(accessCount = userSession.accessCount + 1))
 
-                transaction {
-                    newProblemId = Problems.insert {
-                        it[title] = newProblem.title
-                        it[description] = newProblem.description
-                    } get Problems.id
+                    val newProblem = call.receive<ProblemPostDTO>()
+                    var newProblemId: Int? = null
 
-                    for (testCase in newProblem.testCases) {
-                        TestCases.insert {
-                            it[input] = testCase.input
-                            it[expectedOutput] = testCase.expectedOutput
-                            it[comment] = testCase.comment
-                            it[weight] = testCase.weight
-                            it[timeOutSeconds] = testCase.timeOutSeconds
-                            it[problemId] = newProblemId!!
+                    transaction {
+                        newProblemId = Problems.insert {
+                            it[title] = newProblem.title
+                            it[description] = newProblem.description
+                        } get Problems.id
+
+                        for (testCase in newProblem.testCases) {
+                            TestCases.insert {
+                                it[input] = testCase.input
+                                it[expectedOutput] = testCase.expectedOutput
+                                it[comment] = testCase.comment
+                                it[weight] = testCase.weight
+                                it[timeOutSeconds] = testCase.timeOutSeconds
+                                it[problemId] = newProblemId!!
+                            }
                         }
                     }
-                }
 
-                call.respond(mapOf(
-                    "Problem ID" to newProblemId
-                ))
+                    call.respond(mapOf(
+                        "Problem ID" to newProblemId
+                    ))
+                }
             }
 
             route("{id}") {
@@ -97,65 +104,73 @@ fun Application.configureProblemsRouting() {
                     ))
                 }
 
-                put {
-                    val requestedId = call.parameters["id"]?.toInt() ?:
+                authenticate("auth-session") {
+                    put {
+                        val userSession = call.principal<UserSession>()
+                        call.sessions.set(userSession?.copy(accessCount = userSession.accessCount + 1))
+
+                        val requestedId = call.parameters["id"]?.toInt() ?:
                         throw BadRequestException("The type of Id is wrong.")
 
-                    val updatedProblemContent = call.receive<ProblemPutDTO>()
+                        val updatedProblemContent = call.receive<ProblemPutDTO>()
 
-                    transaction {
-                        Problems.update({ Problems.id.eq(requestedId) }) {
-                            it[title] = updatedProblemContent.title
-                            it[description] = updatedProblemContent.description
-                        }
+                        transaction {
+                            Problems.update({ Problems.id.eq(requestedId) }) {
+                                it[title] = updatedProblemContent.title
+                                it[description] = updatedProblemContent.description
+                            }
 
-                        TestCases.deleteWhere {
-                            problemId.eq(requestedId)
-                                .and(id.notInList(
-                                    updatedProblemContent.testCases.mapNotNull { it.id?.toInt() }
-                                ))
-                        }
+                            TestCases.deleteWhere {
+                                problemId.eq(requestedId)
+                                    .and(id.notInList(
+                                        updatedProblemContent.testCases.mapNotNull { it.id?.toInt() }
+                                    ))
+                            }
 
-                        for (testcase in updatedProblemContent.testCases) {
-                            if (testcase.id == null) {
-                                TestCases.insert {
+                            for (testcase in updatedProblemContent.testCases) {
+                                if (testcase.id == null) {
+                                    TestCases.insert {
+                                        it[input] = testcase.input
+                                        it[expectedOutput] = testcase.expectedOutput
+                                        it[comment] = testcase.comment
+                                        it[weight] = testcase.weight
+                                        it[timeOutSeconds] = testcase.timeOutSeconds
+                                        it[problemId] = requestedId
+                                    }
+                                    continue
+                                }
+
+                                TestCases.update({ TestCases.id.eq(testcase.id.toInt()) }){
                                     it[input] = testcase.input
                                     it[expectedOutput] = testcase.expectedOutput
                                     it[comment] = testcase.comment
                                     it[weight] = testcase.weight
                                     it[timeOutSeconds] = testcase.timeOutSeconds
-                                    it[problemId] = requestedId
                                 }
-                                continue
-                            }
-
-                            TestCases.update({ TestCases.id.eq(testcase.id.toInt()) }){
-                                it[input] = testcase.input
-                                it[expectedOutput] = testcase.expectedOutput
-                                it[comment] = testcase.comment
-                                it[weight] = testcase.weight
-                                it[timeOutSeconds] = testcase.timeOutSeconds
                             }
                         }
+
+                        call.respond(mapOf(
+                            "Updated problem ID" to requestedId
+                        ))
                     }
 
-                    call.respond(mapOf(
-                        "Updated problem ID" to requestedId
-                    ))
-                }
+                    delete {
+                        val userSession = call.principal<UserSession>()
+                        call.sessions.set(userSession?.copy(accessCount = userSession.accessCount + 1))
 
-                delete {
-                    val requestedId = call.parameters["id"]?.toInt() ?:
+                        val requestedId = call.parameters["id"]?.toInt() ?:
                         throw BadRequestException("The type of Id is wrong.")
 
-                    transaction {
-                        TestCases.deleteWhere { problemId.eq(requestedId) }
-                        Problems.deleteWhere { id.eq(requestedId) }
-                    }
+                        transaction {
+                            TestCases.deleteWhere { problemId.eq(requestedId) }
+                            Problems.deleteWhere { id.eq(requestedId) }
+                        }
 
-                    call.respond(mapOf(
-                        "Deleted problem ID" to requestedId
-                    ))
+                        call.respond(mapOf(
+                            "Deleted problem ID" to requestedId
+                        ))
+                    }
                 }
             }
         }
