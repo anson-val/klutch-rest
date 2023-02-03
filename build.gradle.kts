@@ -43,5 +43,5 @@ dependencies {
     implementation ("de.mkammerer:argon2-jvm:2.11")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$ktorVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.10")
 }
