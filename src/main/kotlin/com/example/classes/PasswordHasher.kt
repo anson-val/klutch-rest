@@ -17,7 +17,7 @@ object PasswordHasher {
         return hash
     }
 
-    fun validateHash(hash: String, password: CharArray): Boolean {
+    fun validatePassword(hash: String, password: CharArray): Boolean {
         val result: Boolean
 
         try {
