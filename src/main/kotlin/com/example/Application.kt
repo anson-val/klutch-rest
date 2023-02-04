@@ -26,6 +26,7 @@ import com.example.classes.ProblemPutDTO
 import com.example.classes.UserSession
 import com.example.classes.exceptions.IdAlreadyExistsException
 import com.example.model.Problems
+import com.example.model.Submissions
 import com.example.model.TestCases
 import com.example.model.Users
 import com.example.routes.*
@@ -39,7 +40,7 @@ fun initDatabase() {
     Database.connect(dataSource)
 
     transaction {
-        SchemaUtils.create(Users, Problems, TestCases)
+        SchemaUtils.create(Users, Problems, TestCases, Submissions)
     }
 }
 
@@ -116,5 +117,6 @@ fun Application.module() {
     configureUsersRouting()
     configureLoginRouting()
     configureLogoutRouting()
+    configureSubmissionsRouting()
     initDatabase()
 }

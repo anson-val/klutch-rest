@@ -75,7 +75,7 @@ fun Application.configureProblemsRouting() {
             route("{id}") {
                 get {
                     val requestedId = call.parameters["id"]?.toInt() ?:
-                        throw BadRequestException("The type of Id is wrong.")
+                        throw BadRequestException("Invalid ID type.")
                     var responseData: Problem? = null
 
                     transaction {
@@ -110,7 +110,7 @@ fun Application.configureProblemsRouting() {
                         call.sessions.set(userSession?.copy(accessCount = userSession.accessCount + 1))
 
                         val requestedId = call.parameters["id"]?.toInt() ?:
-                        throw BadRequestException("The type of Id is wrong.")
+                        throw BadRequestException("Invalid ID type.")
 
                         val updatedProblemContent = call.receive<ProblemPutDTO>()
 
@@ -160,7 +160,7 @@ fun Application.configureProblemsRouting() {
                         call.sessions.set(userSession?.copy(accessCount = userSession.accessCount + 1))
 
                         val requestedId = call.parameters["id"]?.toInt() ?:
-                        throw BadRequestException("The type of Id is wrong.")
+                        throw BadRequestException("Invalid ID type.")
 
                         transaction {
                             TestCases.deleteWhere { problemId.eq(requestedId) }
