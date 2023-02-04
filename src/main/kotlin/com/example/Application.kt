@@ -117,5 +117,6 @@ fun Application.module() {
     configureUsersRouting()
     configureLoginRouting()
     configureLogoutRouting()
+    configureSubmissionsRouting()
     initDatabase()
 }
