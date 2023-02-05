@@ -7,8 +7,9 @@ data class Submission(
     val id: Int,
     val language: String,
     val code: String,
-    val executionTimeSeconds: Double,
     val result: String,
+    val score: Double,
+    val executionTimeSeconds: Double,
     val problemId: Int,
     val userId: Int
 )

@@ -8,6 +8,7 @@ object Submissions: Table() {
     val code = text("Code")
     val result = varchar("Result", 255)
     val executionTimeSeconds = double("ExecutionTime")
+    val score = double("Score")
     override val primaryKey = PrimaryKey(id, name = "PK_Submissions_Id")
 
     val problemId = integer("ProblemId") references Problems.id

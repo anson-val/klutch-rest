@@ -34,8 +34,9 @@ fun Application.configureSubmissionsRouting() {
                         submissionId = Submissions.insert {
                             it[language] = submissionData.language
                             it[code] = submissionData.code
-                            it[executionTimeSeconds] = -1.0
                             it[result] = "-"
+                            it[executionTimeSeconds] = -1.0
+                            it[score] = -1.0
                             it[problemId] = submissionData.problemId
                             it[userId] = userIdFromSession.toInt()
                         } get Submissions.id
@@ -66,8 +67,9 @@ fun Application.configureSubmissionsRouting() {
                                 id = requestedSubmission[Submissions.id],
                                 language = requestedSubmission[Submissions.language],
                                 code = requestedSubmission[Submissions.code],
-                                executionTimeSeconds = requestedSubmission[Submissions.executionTimeSeconds],
                                 result = requestedSubmission[Submissions.result],
+                                score = requestedSubmission[Submissions.score],
+                                executionTimeSeconds = requestedSubmission[Submissions.executionTimeSeconds],
                                 problemId = requestedSubmission[Submissions.problemId],
                                 userId = requestedSubmission[Submissions.userId]
                             )

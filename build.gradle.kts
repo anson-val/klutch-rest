@@ -42,7 +42,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.postgresql:postgresql:42.5.2")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation ("de.mkammerer:argon2-jvm:2.11")
+    implementation("de.mkammerer:argon2-jvm:2.11")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.10")
